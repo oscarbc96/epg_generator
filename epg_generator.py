@@ -3,9 +3,13 @@ import xml.etree.ElementTree as ET
 from multiprocessing import Pool, cpu_count
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
-from datetime import datetime
 
-from conf import DAYS_TO_DOWNLOAD, EPG_FILE, MOVISTAR_AJAX_URL, MOVISTAR_CHANNEL_LOGO_URL, MOVISTAR_DESCRIPTION
+
+MOVISTAR_AJAX_URL = "http://comunicacion.movistarplus.es/wp-admin/admin-ajax.php"
+MOVISTAR_CHANNEL_LOGO_URL = "http://www.movistarplus.es/recorte/m-NEO/canal/"
+MOVISTAR_DESCRIPTION = "http://comunicacion.movistarplus.es/detalle-de-programacion/?cee="
+EPG_FILE = "output/epg.xml"
+DAYS_TO_DOWNLOAD = 1
 
 
 class Movistar(object):
