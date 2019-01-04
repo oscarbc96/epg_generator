@@ -1,10 +1,5 @@
 language: python
 
-env:
-  global:
-    - CAMPFIRE_TOKEN=abc123
-    - TIMEOUT=1000
-
 python:
   - "3.7"
 
@@ -13,3 +8,11 @@ install:
 
 script:
   - python epg_generator.py
+
+deploy:
+  provider: pages
+  skip-cleanup: true
+  local-dir: "output"
+  github-token: $GITHUB_TOKEN
+  on:
+    branch: master
