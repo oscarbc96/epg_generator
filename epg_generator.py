@@ -15,6 +15,8 @@ DAYS_TO_DOWNLOAD = 1
 class Movistar(object):
     @classmethod
     def get_channels(self):
+        print("Getting movistar channels...")
+
         payload = {
             "action": "getChannels",
         }
@@ -25,6 +27,8 @@ class Movistar(object):
 
     @classmethod
     def get_programation(self, date, channels):
+        print("Getting movistar programmes...")
+
         payload = {
             "action": "getProgramation",
             "categorires": "",
@@ -42,6 +46,8 @@ class Movistar(object):
 
     @classmethod
     def get_extra_info(self, cee):
+        print(f"Downloading extra info for {cee}")
+
         info = {}
 
         url = MOVISTAR_DESCRIPTION + cee
@@ -93,6 +99,8 @@ class EPGGenerator(object):
         self.dump_epg_data(channels, programmes)
 
     def download_movistar_data(self):
+        print("Downloading movistar data...")
+
         today = datetime.now()
 
         date_str = today.strftime("%Y-%m-%d")
@@ -127,6 +135,7 @@ class EPGGenerator(object):
         return info
 
     def generate_epg_data(self, data):
+        print("Generating epg data...")
         # ["date", "channels", "channelsProgram", "channelsProgramDayBefore"]
 
         channels = []
@@ -145,6 +154,8 @@ class EPGGenerator(object):
         return channels, programmes
 
     def dump_epg_data(self, channels, programmes):
+        print("Dumping epg data to xml...")
+
         tv = ET.Element("tv")
 
         for channel_data in channels:
@@ -188,6 +199,13 @@ class EPGGenerator(object):
 
 if __name__ == "__main__":
     start = datetime.now()
+
+    print(f"Start: {start}")
+
     EPGGenerator().run()
+
     stop = datetime.now()
-    print(stop-start)
+
+    print(f"Stop: {stop}")
+
+    print(f"Execution time: {stop-start}")
