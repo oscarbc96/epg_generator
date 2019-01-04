@@ -203,6 +203,10 @@ class EPGGenerator(object):
 
 
 if __name__ == "__main__":
+    print("EPG Generator")
+
+    print(f"N. cores: {cpu_count()}")
+
     start = datetime.now()
 
     print(f"Start: {start}")
