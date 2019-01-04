@@ -1,8 +1,9 @@
 import requests
 import xml.etree.ElementTree as ET
-
+from multiprocessing import Pool, cpu_count
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 from conf import DAYS_TO_DOWNLOAD, EPG_FILE, MOVISTAR_AJAX_URL, MOVISTAR_CHANNEL_LOGO_URL, MOVISTAR_DESCRIPTION
 
@@ -96,36 +97,46 @@ class EPGGenerator(object):
 
         return Movistar.get_programation(date_str, channels)
 
+    def create_channel(self, channel):
+        return {
+            "name": channel["des_cadena_tv"],
+            "code": channel["cod_cadena_tv"],
+            "logo": Movistar.get_channel_logo(channel["cod_cadena_tv"])
+        }
+
+    def create_programme(self, programme):
+        start_time = Movistar.parse_time(programme["f_evento_rejilla"])
+        stop_time = Movistar.parse_time(programme["f_fin_evento_rejilla"])
+
+        info = {
+            "channel": programme["cod_cadena_tv"],
+            "title": programme["des_evento_rejilla"],
+            "category": programme["des_genero"],
+            "start": start_time,
+            "stop": stop_time
+        }
+
+        cee = programme["cod_elemento_emision"]
+        if cee:
+            info.update(Movistar.get_extra_info(cee))
+
+        return info
+
     def generate_epg_data(self, data):
         # ["date", "channels", "channelsProgram", "channelsProgramDayBefore"]
 
         channels = []
         programmes = []
 
-        for channel in data["channels"]:
-            channels.append({
-                "name": channel["des_cadena_tv"],
-                "code": channel["cod_cadena_tv"],
-                "logo": Movistar.get_channel_logo(channel["cod_cadena_tv"])
-            })
+        p = Pool(cpu_count())
+        channels = p.map(self.create_channel, data["channels"])
+        p.terminate()
+        p.join()
 
-        for programme in data["channelsProgram"][0]:
-            start_time = Movistar.parse_time(programme["f_evento_rejilla"])
-            stop_time = Movistar.parse_time(programme["f_fin_evento_rejilla"])
-
-            info = {
-                "channel": programme["cod_cadena_tv"],
-                "title": programme["des_evento_rejilla"],
-                "category": programme["des_genero"],
-                "start": start_time,
-                "stop": stop_time
-            }
-
-            # cee = programme["cod_elemento_emision"]
-            # if cee:
-            #     info.update(Movistar.get_extra_info(cee))
-
-            programmes.append(info)
+        p = Pool(cpu_count())
+        programmes = p.map(self.create_programme, data["channelsProgram"][0])
+        p.terminate()
+        p.join()
 
         return channels, programmes
 
@@ -157,10 +168,10 @@ class EPGGenerator(object):
             category.set("lang", "es")
             category.text = programme_data["category"]
 
-            # if "desc" in programme:
-            #     desc = ET.SubElement(programme, "desc")
-            #     desc.set("lang", "es")
-            #     desc.text = programme_data["desc"]
+            if "desc" in programme_data:
+                desc = ET.SubElement(programme, "desc")
+                desc.set("lang", "es")
+                desc.text = programme_data["desc"]
 
         xml = ET.tostring(tv, encoding="utf8", method="xml")
 
@@ -172,4 +183,7 @@ class EPGGenerator(object):
 
 
 if __name__ == "__main__":
+    start = datetime.now()
     EPGGenerator().run()
+    stop = datetime.now()
+    print(stop-start)
