@@ -1,3 +1,4 @@
+import os
 import requests
 import xml.etree.ElementTree as ET
 from multiprocessing import Pool, cpu_count
@@ -8,7 +9,8 @@ from bs4 import BeautifulSoup
 MOVISTAR_AJAX_URL = "http://comunicacion.movistarplus.es/wp-admin/admin-ajax.php"
 MOVISTAR_CHANNEL_LOGO_URL = "http://www.movistarplus.es/recorte/m-NEO/canal/"
 MOVISTAR_DESCRIPTION = "http://comunicacion.movistarplus.es/detalle-de-programacion/?cee="
-EPG_FILE = "output/epg.xml"
+OUTPUT_FOLDER = "output/"
+EPG_FILE = OUTPUT_FOLDER + "epg.xml"
 DAYS_TO_DOWNLOAD = 1
 
 
@@ -189,6 +191,9 @@ class EPGGenerator(object):
                 desc.text = programme_data["desc"]
 
         xml = ET.tostring(tv, encoding="utf8", method="xml")
+
+        if not os.path.exists(OUTPUT_FOLDER):
+            os.makedirs(OUTPUT_FOLDER)
 
         output = open(EPG_FILE, "wb")
 
