@@ -1,0 +1,15 @@
+language: python
+
+env:
+  global:
+    - CAMPFIRE_TOKEN=abc123
+    - TIMEOUT=1000
+
+python:
+  - "3.7"
+
+install:
+  - pip install -r requirements.txt
+
+script:
+  - python epg_generator.py
