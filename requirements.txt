@@ -1,2 +1,4 @@
+Unidecode
 requests
 BeautifulSoup4
+pytz
