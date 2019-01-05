@@ -1,94 +1,11 @@
 import os
-import requests
 import xml.etree.ElementTree as ET
 from multiprocessing import Pool, cpu_count
-from datetime import datetime, timedelta
-from bs4 import BeautifulSoup
+from datetime import datetime
 
-
-MOVISTAR_AJAX_URL = "http://comunicacion.movistarplus.es/wp-admin/admin-ajax.php"
-MOVISTAR_CHANNEL_LOGO_URL = "http://www.movistarplus.es/recorte/m-NEO/canal/"
-MOVISTAR_DESCRIPTION = "http://comunicacion.movistarplus.es/detalle-de-programacion/?cee="
-OUTPUT_FOLDER = "output/"
-EPG_FILE = OUTPUT_FOLDER + "epg.xml"
-DAYS_TO_DOWNLOAD = 1
-
-
-class Movistar(object):
-    @classmethod
-    def get_channels(self):
-        print("Getting movistar channels...")
-
-        payload = {
-            "action": "getChannels",
-        }
-
-        response = requests.post(MOVISTAR_AJAX_URL, data=payload)
-
-        return [ch["cod_cadena_tv"] for ch in response.json()]
-
-    @classmethod
-    def get_programation(self, date, channels):
-        print("Getting movistar programmes...")
-
-        payload = {
-            "action": "getProgramation",
-            "categorires": "",
-            "channels[]": channels,
-            "day": date
-        }
-
-        response = requests.post(MOVISTAR_AJAX_URL, data=payload)
-
-        return response.json()
-
-    @classmethod
-    def get_channel_logo(self, channel):
-        return MOVISTAR_CHANNEL_LOGO_URL + channel
-
-    @classmethod
-    def get_extra_info(self, cee):
-        print(f"Downloading extra info for {cee}")
-
-        info = {}
-
-        url = MOVISTAR_DESCRIPTION + cee
-
-        response = requests.get(url)
-
-        soup = BeautifulSoup(response.content, "html.parser")
-
-        # info["image"] = soup.find("img", class_="img-v-detail")["src"]
-
-        info["desc"] = soup.find("div", class_="sinopsis_large").find(text=True, recursive=False).strip()
-
-        # info["details"] = {}
-
-        # details = soup.find("div", class_="details_container").find_all("div")
-
-        # for i in range(0, len(details)-1, 2):
-        #     title = details[i].text.strip().capitalize()
-        #     value_item = details[i+1].find("span", class_="details_value")
-
-        #     content_list = value_item.find_all("span")
-        #     if content_list:
-        #         value = ", ".join([v.text.strip() for v in content_list])
-        #     else:
-        #         value = value_item.text.strip()
-
-        #     info["details"][title] = value
-
-        # info["age_restriction"] = soup.find("span", class_="nivel_moral").text.strip()
-
-        return info
-
-    @classmethod
-    def parse_time(self, time):
-        time = time.replace("-", "")
-        time = time.replace(" ", "")
-        time = time.replace(":", "")
-
-        return time + " +0000"
+from movistar import Movistar
+from date_time import DateTime
+from conf import OUTPUT_FOLDER, EPG_FILE, DOWNLOAD_EXTRA_INFO, DAYS_TO_DOWNLOAD
 
 
 class EPGGenerator(object):
@@ -96,20 +13,45 @@ class EPGGenerator(object):
     def run(self):
         movistar_data = self.download_movistar_data()
 
-        channels, programmes = self.generate_epg_data(movistar_data)
+        channels_data, programmes_data = self.merge_movistar_data(movistar_data)
+
+        channels, programmes = self.generate_epg_data(channels_data, programmes_data)
 
         self.dump_epg_data(channels, programmes)
 
     def download_movistar_data(self):
         print("Downloading movistar data...")
 
-        today = datetime.now()
-
-        date_str = today.strftime("%Y-%m-%d")
-
         channels = Movistar.get_channels()
 
-        return Movistar.get_programation(date_str, channels)
+        data = []
+
+        for day in range(DAYS_TO_DOWNLOAD):
+            date_str = DateTime().get_date_str(day)
+
+            data.append(Movistar.get_programation(date_str, channels))
+
+        return data
+
+    def merge_movistar_data(self, data):
+        channels = []
+        programmes = []
+
+        data_channels = []
+        data_programmes = []
+
+        for dt in data:
+            data_channels.extend(dt["channels"])
+
+        for dt in data:
+            data_programmes.extend(dt["channelsProgram"][0])
+            data_programmes.extend(dt["channelsProgramDayBefore"][0])
+
+        channels = list({v["cod_cadena_tv"]: v for v in data_channels}.values())
+
+        programmes = list({v["cod_evento_rejilla"]: v for v in data_programmes}.values())
+
+        return channels, programmes
 
     def create_channel(self, channel):
         return {
@@ -119,8 +61,8 @@ class EPGGenerator(object):
         }
 
     def create_programme(self, programme):
-        start_time = Movistar.parse_time(programme["f_evento_rejilla"])
-        stop_time = Movistar.parse_time(programme["f_fin_evento_rejilla"])
+        start_time = DateTime().format_time(programme["f_evento_rejilla"])
+        stop_time = DateTime().format_time(programme["f_fin_evento_rejilla"])
 
         info = {
             "channel": programme["cod_cadena_tv"],
@@ -131,34 +73,35 @@ class EPGGenerator(object):
         }
 
         cee = programme["cod_elemento_emision"]
-        if cee:
+        if cee and DOWNLOAD_EXTRA_INFO:
             info.update(Movistar.get_extra_info(cee))
 
         return info
 
-    def generate_epg_data(self, data):
+    def generate_epg_data(self, channels, programmes):
         print("Generating epg data...")
-        # ["date", "channels", "channelsProgram", "channelsProgramDayBefore"]
-
-        channels = []
-        programmes = []
 
         p = Pool(cpu_count())
-        channels = p.map(self.create_channel, data["channels"])
+        epg_channels = p.map(self.create_channel, channels)
         p.terminate()
         p.join()
 
         p = Pool(cpu_count())
-        programmes = p.map(self.create_programme, data["channelsProgram"][0])
+        epg_programmes = p.map(self.create_programme, programmes)
         p.terminate()
         p.join()
 
-        return channels, programmes
+        return epg_channels, epg_programmes
 
     def dump_epg_data(self, channels, programmes):
         print("Dumping epg data to xml...")
 
         tv = ET.Element("tv")
+        tv.set("date", DateTime().get_date_str(1))
+        tv.set("source-info-url", "http://comunicacion.movistarplus.es/programacion/")
+        tv.set("source-info-name", "Movistar")
+        tv.set("generator-info-name", "Movistar EPG generator")
+        tv.set("generator-info-url", "https://github.com/oscarbc96/epg_generator")
 
         for channel_data in channels:
             channel = ET.SubElement(tv, "channel")
@@ -168,7 +111,7 @@ class EPGGenerator(object):
             display_name.set("lang", "es")
             display_name.text = channel_data["name"]
 
-            icon = ET.SubElement(channel, "display-name")
+            icon = ET.SubElement(channel, "icon")
             icon.set("src", channel_data["logo"])
 
         for programme_data in programmes:
@@ -190,6 +133,10 @@ class EPGGenerator(object):
                 desc.set("lang", "es")
                 desc.text = programme_data["desc"]
 
+            if "image" in programme_data:
+                icon = ET.SubElement(programme, "icon")
+                icon.set("src", programme_data["image"])
+
         xml = ET.tostring(tv, encoding="utf8", method="xml")
 
         if not os.path.exists(OUTPUT_FOLDER):
@@ -206,6 +153,10 @@ if __name__ == "__main__":
     print("EPG Generator")
 
     print(f"N. cores: {cpu_count()}")
+
+    print(f"Download extra info: {DOWNLOAD_EXTRA_INFO}")
+
+    print(f"Days to download: {DAYS_TO_DOWNLOAD}")
 
     start = datetime.now()
 
