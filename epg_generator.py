@@ -32,7 +32,7 @@ class EPGGenerator(object):
 
         data = []
 
-        for day in range(DAYS_TO_DOWNLOAD):
+        for day in range(-1, DAYS_TO_DOWNLOAD):
             date_str = DateTime().get_date_str(day)
 
             data.append(Movistar.get_programation(date_str, channels))
