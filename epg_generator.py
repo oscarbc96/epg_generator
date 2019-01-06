@@ -2,7 +2,7 @@ import os
 import xml.etree.ElementTree as ET
 from multiprocessing import Pool, cpu_count
 from datetime import datetime
-
+from diskcache import Cache
 
 from movistar import Movistar
 from date_time import DateTime
@@ -10,6 +10,9 @@ from conf import OUTPUT_FOLDER, EPG_FILE, DOWNLOAD_EXTRA_INFO, DAYS_TO_DOWNLOAD
 
 
 class EPGGenerator(object):
+
+    def __init__(self):
+        self.cache = Cache("cache")
 
     def run(self):
         movistar_data = self.download_movistar_data()
@@ -19,6 +22,8 @@ class EPGGenerator(object):
         channels, programmes = self.generate_epg_data(channels_data, programmes_data)
 
         self.dump_epg_data(channels, programmes)
+
+        self.cache.evict(DateTime().get_date_str(-DAYS_TO_DOWNLOAD))
 
     def download_movistar_data(self):
         print("Downloading movistar data...")
@@ -62,6 +67,11 @@ class EPGGenerator(object):
         }
 
     def create_programme(self, programme):
+        cer = programme["cod_evento_rejilla"]
+
+        if cer in self.cache:
+            return self.cache.get(cer)
+
         start_time = DateTime().format_time(programme["f_evento_rejilla"])
         stop_time = DateTime().format_time(programme["f_fin_evento_rejilla"])
 
@@ -76,6 +86,9 @@ class EPGGenerator(object):
         cee = programme["cod_elemento_emision"]
         if cee and DOWNLOAD_EXTRA_INFO:
             info.update(Movistar.get_extra_info(cee))
+
+        emission_date = programme["f_evento_rejilla"][0:10]
+        self.cache.set(cer, info, expire=None, tag=emission_date)
 
         return info
 
@@ -147,7 +160,7 @@ class EPGGenerator(object):
 
                     episode_num = ET.SubElement(programme, "episode-num")
                     episode_num.set("system", "xmltv_ns")
-                    episode_num.text =f"{season}.{chapter}.0/1"
+                    episode_num.text = f"{season}.{chapter}.0/1"
 
         xml = ET.tostring(tv, encoding="utf8", method="xml")
 

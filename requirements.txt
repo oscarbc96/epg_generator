@@ -2,3 +2,4 @@ Unidecode
 requests
 BeautifulSoup4
 pytz
+diskcache
