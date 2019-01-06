@@ -3,6 +3,7 @@ import xml.etree.ElementTree as ET
 from multiprocessing import Pool, cpu_count
 from datetime import datetime
 
+
 from movistar import Movistar
 from date_time import DateTime
 from conf import OUTPUT_FOLDER, EPG_FILE, DOWNLOAD_EXTRA_INFO, DAYS_TO_DOWNLOAD
@@ -136,6 +137,17 @@ class EPGGenerator(object):
             if "image" in programme_data:
                 icon = ET.SubElement(programme, "icon")
                 icon.set("src", programme_data["image"])
+
+            if "details" in programme_data:
+                details = programme_data["details"]
+
+                if "temporada" in details and "capitulo" in details:
+                    season = details["temporada"]
+                    chapter = details["capitulo"]
+
+                    episode_num = ET.SubElement(programme, "episode-num")
+                    episode_num.set("system", "xmltv_ns")
+                    episode_num.text =f"{season}.{chapter}.0/1"
 
         xml = ET.tostring(tv, encoding="utf8", method="xml")
 
