@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 
-from age_rating import AgeRating
 from utils import clean_string
 from conf import MOVISTAR_AJAX_URL, MOVISTAR_CHANNEL_LOGO_URL, MOVISTAR_DESCRIPTION_URL
 
@@ -70,6 +69,6 @@ class Movistar(object):
 
             info["details"][title] = value
 
-        info["age_rating"] = AgeRating.from_str(soup.find("span", class_="nivel_moral").text)
+        info["age_rating"] = soup.find("span", class_="nivel_moral").text.strip()
 
         return info

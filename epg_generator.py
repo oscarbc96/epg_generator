@@ -151,6 +151,13 @@ class EPGGenerator(object):
                 icon = ET.SubElement(programme, "icon")
                 icon.set("src", programme_data["image"])
 
+            if "age_rating" in programme_data:
+                rating = ET.SubElement(programme, "rating")
+                rating.set("system", "ES")
+
+                value = ET.SubElement(rating, "value")
+                value.text = programme_data["age_rating"]
+
             if "details" in programme_data:
                 details = programme_data["details"]
 
@@ -161,6 +168,18 @@ class EPGGenerator(object):
                     episode_num = ET.SubElement(programme, "episode-num")
                     episode_num.set("system", "xmltv_ns")
                     episode_num.text = f"{season}.{chapter}.0/1"
+
+                credits = ET.SubElement(programme, "credits")
+
+                if "actor" in details:
+                    for actor_data in details["actor"]:
+                        actor = ET.SubElement(credits, "actor")
+                        actor.text = actor_data
+
+                if "director" in details:
+                    for director_data in details["director"]:
+                        director = ET.SubElement(credits, "director")
+                        director.text = director_data
 
         xml = ET.tostring(tv, encoding="utf8", method="xml")
 
