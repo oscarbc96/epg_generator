@@ -1,3 +1,4 @@
+CACHE_FOLDER = "cache"
 OUTPUT_FOLDER = "output/"
 EPG_FILE = OUTPUT_FOLDER + "epg.xml"
 

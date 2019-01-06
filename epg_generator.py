@@ -6,13 +6,13 @@ from diskcache import Cache
 
 from movistar import Movistar
 from date_time import DateTime
-from conf import OUTPUT_FOLDER, EPG_FILE, DOWNLOAD_EXTRA_INFO, DAYS_TO_DOWNLOAD
+from conf import OUTPUT_FOLDER, CACHE_FOLDER, EPG_FILE, DOWNLOAD_EXTRA_INFO, DAYS_TO_DOWNLOAD
 
 
 class EPGGenerator(object):
 
     def __init__(self):
-        self.cache = Cache("cache")
+        self.cache = Cache(CACHE_FOLDER)
 
     def run(self):
         movistar_data = self.download_movistar_data()
