@@ -23,7 +23,7 @@ class EPGGenerator(object):
 
         self.dump_epg_data(channels, programmes)
 
-        self.cache.evict(DateTime().get_date_str(-DAYS_TO_DOWNLOAD))
+        self.cache.expire()
 
     def download_movistar_data(self):
         print("Downloading movistar data...")
@@ -87,8 +87,9 @@ class EPGGenerator(object):
         if cee and DOWNLOAD_EXTRA_INFO:
             info.update(Movistar.get_extra_info(cee))
 
-        emission_date = programme["f_evento_rejilla"][0:10]
-        self.cache.set(cer, info, expire=None, tag=emission_date)
+        # DAYS_TO_DOWNLOAD + 1 we add the day before data | 86400 seconds in a day
+        expire_time = (DAYS_TO_DOWNLOAD + 1) * 86400
+        self.cache.set(cer, info, expire=expire_time)
 
         return info
 
