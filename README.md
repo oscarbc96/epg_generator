@@ -8,6 +8,14 @@ El repositorio está configurado con Travis CI para ejecutarse de manera automá
 https://oscarbc96.github.io/epg_generator/epg.xml
 ```
 
+## Instalación
+
+Lenguaje: Python 3
+
+```
+pip install -r requirements.txt
+```
+
 ## Ejecutar
 
 ```
