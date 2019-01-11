@@ -16,6 +16,8 @@ class Movistar(object):
 
         response = requests.post(MOVISTAR_AJAX_URL, data=payload)
 
+        response.raise_for_status()
+
         return [ch["cod_cadena_tv"] for ch in response.json()]
 
     @classmethod
@@ -30,6 +32,8 @@ class Movistar(object):
         }
 
         response = requests.post(MOVISTAR_AJAX_URL, data=payload)
+
+        response.raise_for_status()
 
         return response.json()
 
@@ -46,6 +50,8 @@ class Movistar(object):
         url = MOVISTAR_DESCRIPTION_URL + cee
 
         response = requests.get(url)
+
+        response.raise_for_status()
 
         soup = BeautifulSoup(response.content, "html.parser")
 
