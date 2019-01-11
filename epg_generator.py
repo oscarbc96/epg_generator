@@ -112,7 +112,7 @@ class EPGGenerator(object):
         print("Dumping epg data to xml...")
 
         tv = ET.Element("tv")
-        tv.set("date", DateTime().get_date_str(1))
+        tv.set("date", DateTime().get_date_str(0))
         tv.set("source-info-url", "http://comunicacion.movistarplus.es/programacion/")
         tv.set("source-info-name", "Movistar")
         tv.set("generator-info-name", "Movistar EPG generator")
