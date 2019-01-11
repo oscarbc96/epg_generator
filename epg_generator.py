@@ -203,9 +203,9 @@ if __name__ == "__main__":
 
     print(f"Days to download: {DAYS_TO_DOWNLOAD}")
 
-    start = datetime.now()
-
     print(f"Start: {start}")
+
+    start = datetime.now()
 
     EPGGenerator().run()
 
