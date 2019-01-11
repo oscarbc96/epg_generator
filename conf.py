@@ -1,5 +1,9 @@
-CACHE_FOLDER = "cache"
-OUTPUT_FOLDER = "output/"
+from os.path import dirname, realpath, join
+
+SCRIPT_FOLDER = dirname(realpath(__file__))
+
+CACHE_FOLDER = join(SCRIPT_FOLDER, "cache/")
+OUTPUT_FOLDER = join(SCRIPT_FOLDER, "output/")
 EPG_FILE = OUTPUT_FOLDER + "epg.xml"
 
 MOVISTAR_AJAX_URL = "http://comunicacion.movistarplus.es/wp-admin/admin-ajax.php"
