@@ -1,5 +1,5 @@
 output/
-cache/
+#cache/
 
 # Created by https://www.gitignore.io/api/linux,macos,python,windows,pycharm,sublimetext,visualstudiocode
 # Edit at https://www.gitignore.io/?templates=linux,macos,python,windows,pycharm,sublimetext,visualstudiocode
