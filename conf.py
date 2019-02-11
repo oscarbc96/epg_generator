@@ -12,4 +12,4 @@ MOVISTAR_DESCRIPTION_URL = "http://comunicacion.movistarplus.es/detalle-de-progr
 
 DOWNLOAD_EXTRA_INFO = True
 
-DAYS_TO_DOWNLOAD = 3
+DAYS_TO_DOWNLOAD = 2
