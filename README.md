@@ -1,14 +1,6 @@
 # Generador EPG MovistarTV
 
-Resultado de la última ejecución: [![Build Status](https://travis-ci.org/oscarbc96/epg_generator.svg?branch=master)](https://travis-ci.org/oscarbc96/epg_generator)
-
 Generador del EPG de la programación de MovistarTV. El script hace uso de las mismas llamadas AJAX para visualizar la programación en la web `http://comunicacion.movistarplus.es/programacion/`. Primero, obtiene la lista completa de canales y descarga la programación para esos canales. Posteriormente, procesa la información obtenida para generar un fichero en formato XMLTV. El script tiene 2 modos de funcionamiento: el sencillo y el complejo. El sencillo genera un archivo con la información básica de cada emisión. El complejo, para cada emisión, si está disponible, se descarga la ficha técnica. Este último hace uso de multiprocesado y cache para agilizar el funcionamiento.
-
-El repositorio está configurado con Travis CI para ejecutarse de manera automática cada día en modo sencillo y publicando el resultado como una página web de Github. Se pueden ver la ultima versión en:
-
-```
-https://oscarbc96.github.io/epg_generator/epg.xml
-```
 
 ## Instalación
 
