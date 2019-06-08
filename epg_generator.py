@@ -60,16 +60,16 @@ class EPGGenerator(object):
 
         return channels, programmes
 
-    def create_channels(self, channel):
-        channels = [self.create_channel(channel)]
+    def create_channels(self, channel_data):
+        channels = [self.create_channel(channel_data)]
 
-        if channel["cod_cadena_tv"] in HD_CHANNELS:
+        if channel_data["cod_cadena_tv"] in HD_CHANNELS:
             channel = dict(channels[0])  # We clone the original channel
             channel["name"] = f"{channel['name']} HD"
             channel["code"] = f"{channel['code']} HD"
             channels.append(channel)
 
-        delays = DELAYS.get(channel["cod_cadena_tv"], 0)
+        delays = DELAYS.get(channel_data["cod_cadena_tv"], 0)
         for delay in range(1, delays + 1):
             channel = dict(channels[0])  # We clone the original channel
             channel["name"] = f"{channel['name']}-{delay}h"
@@ -84,15 +84,15 @@ class EPGGenerator(object):
             "logo": Movistar.get_channel_logo(channel["cod_cadena_tv"])
         }
 
-    def create_programmes(self, programme):
-        programmes = [self.create_programme(programme)]
+    def create_programmes(self, programme_data):
+        programmes = [self.create_programme(programme_data)]
 
-        if programme["cod_cadena_tv"] in HD_CHANNELS:
+        if programme_data["cod_cadena_tv"] in HD_CHANNELS:
             programme = dict(programmes[0])  # We clone the original programme
             programme["channel"] = f"{programme['channel']} HD"
             programmes.append(programme)
 
-        delays = DELAYS.get(programme["cod_cadena_tv"], 0)
+        delays = DELAYS.get(programme_data["cod_cadena_tv"], 0)
         for delay in range(1, delays + 1):
             programme = dict(programmes[0])  # We clone the original programme
             programme["channel"] = f"{programme['channel']}-{delay}h"
