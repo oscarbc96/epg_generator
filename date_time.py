@@ -1,9 +1,9 @@
-from datetime import datetime, timedelta
+from datetime import datetime
+
 from pytz import timezone
 
 
 class DateTime(object):
-
     __instance = None
 
     def __new__(cls, *args, **kwargs):
@@ -16,22 +16,9 @@ class DateTime(object):
         if DateTime.__instance is None:
             DateTime.__instance = self
 
-        now = datetime.now()
+    def parse(self, time):
+        return datetime.strptime(time, "%Y-%m-%d %H:%M:%S")
 
-        now_tz = timezone("Europe/Madrid").localize(now)
-
-        self.tz = now_tz.strftime("%z")
-
-    def format_time(self, time):
-        time = time.replace("-", "")
-        time = time.replace(" ", "")
-        time = time.replace(":", "")
-
-        return time + " " + self.tz
-
-    def get_date_str(self, in_future):
-        today = datetime.now()
-
-        future_date = today + timedelta(days=in_future)
-
-        return future_date.strftime("%Y-%m-%d")
+    def format(self, time):
+        time = timezone("Europe/Madrid").localize(time)
+        return datetime.strftime(time, "%Y%m%d%H%M%S %z")
