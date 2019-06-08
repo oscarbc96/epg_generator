@@ -96,8 +96,8 @@ class EPGGenerator(object):
         for delay in range(1, delays + 1):
             programme = dict(programmes[0])  # We clone the original programme
             programme["channel"] = f"{programme['channel']}-{delay}h"
-            programme["start"] -= timedelta(hours=delay)
-            programme["stop"] -= timedelta(hours=delay)
+            programme["start"] += timedelta(hours=delay)
+            programme["stop"] += timedelta(hours=delay)
             programmes.append(programme)
 
         return programmes
