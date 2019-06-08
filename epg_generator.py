@@ -63,7 +63,7 @@ class EPGGenerator(object):
     def create_channels(self, channel):
         channels = [self.create_channel(channel)]
 
-        if channel["code"] in HD_CHANNELS:
+        if channel["cod_cadena_tv"] in HD_CHANNELS:
             channel = dict(channels[0])  # We clone the original channel
             channel["name"] = f"{channel['name']} HD"
             channel["code"] = f"{channel['code']} HD"
