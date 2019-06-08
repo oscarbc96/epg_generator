@@ -10,6 +10,8 @@ MOVISTAR_AJAX_URL = "https://comunicacion.movistarplus.es/wp-admin/admin-ajax.ph
 MOVISTAR_CHANNEL_LOGO_URL = "https://www.movistarplus.es/recorte/m-NEO/canal/"
 MOVISTAR_DESCRIPTION_URL = "https://comunicacion.movistarplus.es/detalle-de-programacion/?cee="
 
-DOWNLOAD_EXTRA_INFO = True
+DOWNLOAD_EXTRA_INFO = False
 
 DAYS_TO_DOWNLOAD = 2
+
+DELAYS = {}
