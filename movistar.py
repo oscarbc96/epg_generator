@@ -1,8 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 
-from utils import clean_string
 from conf import MOVISTAR_AJAX_URL, MOVISTAR_CHANNEL_LOGO_URL, MOVISTAR_DESCRIPTION_URL
+from utils import clean_string
 
 
 class Movistar(object):
@@ -63,9 +63,9 @@ class Movistar(object):
 
         details = soup.find("div", class_="details_container").find_all("div")
 
-        for i in range(0, len(details)-1, 2):
+        for i in range(0, len(details) - 1, 2):
             title = clean_string(details[i].text)
-            value_item = details[i+1].find("span", class_="details_value")
+            value_item = details[i + 1].find("span", class_="details_value")
 
             content_list = value_item.find_all("span")
             if content_list:
