@@ -1,12 +1,14 @@
+import itertools
 import os
 import xml.etree.ElementTree as ET
+from datetime import datetime, timedelta
 from multiprocessing import Pool, cpu_count
-from datetime import datetime
+
 from diskcache import Cache
 
-from movistar import Movistar
+from conf import OUTPUT_FOLDER, CACHE_FOLDER, EPG_FILE, DOWNLOAD_EXTRA_INFO, DAYS_TO_DOWNLOAD, DELAYS, HD_CHANNELS
 from date_time import DateTime
-from conf import OUTPUT_FOLDER, CACHE_FOLDER, EPG_FILE, DOWNLOAD_EXTRA_INFO, DAYS_TO_DOWNLOAD
+from movistar import Movistar
 
 
 class EPGGenerator(object):
@@ -29,13 +31,12 @@ class EPGGenerator(object):
         print("Downloading movistar data...")
 
         channels = Movistar.get_channels()
-
         data = []
 
-        for day in range(-1, DAYS_TO_DOWNLOAD):
-            date_str = DateTime().get_date_str(day)
-
-            data.append(Movistar.get_programation(date_str, channels))
+        for days in range(-1, DAYS_TO_DOWNLOAD):
+            time_delta = timedelta(days=days)
+            date = datetime.now() + time_delta
+            data.append(Movistar.get_programation(date.strftime("%Y-%m-%d"), channels))
 
         return data
 
@@ -59,6 +60,23 @@ class EPGGenerator(object):
 
         return channels, programmes
 
+    def create_channels(self, channel):
+        channels = [self.create_channel(channel)]
+
+        if channel["code"] in HD_CHANNELS:
+            channel = dict(channels[0])  # We clone the original channel
+            channel["name"] = f"{channel['name']} HD"
+            channel["code"] = f"{channel['code']} HD"
+            channels.append(channel)
+
+        delays = DELAYS.get(channel["cod_cadena_tv"], 0)
+        for delay in range(1, delays + 1):
+            channel = dict(channels[0])  # We clone the original channel
+            channel["name"] = f"{channel['name']}-{delay}h"
+            channel["code"] = f"{channel['code']}-{delay}h"
+            channels.append(channel)
+        return channels
+
     def create_channel(self, channel):
         return {
             "name": channel["des_cadena_tv"],
@@ -66,21 +84,36 @@ class EPGGenerator(object):
             "logo": Movistar.get_channel_logo(channel["cod_cadena_tv"])
         }
 
+    def create_programmes(self, programme):
+        programmes = [self.create_programme(programme)]
+
+        if programme["cod_cadena_tv"] in HD_CHANNELS:
+            programme = dict(programmes[0])  # We clone the original programme
+            programme["channel"] = f"{programme['channel']} HD"
+            programmes.append(programme)
+
+        delays = DELAYS.get(programme["cod_cadena_tv"], 0)
+        for delay in range(1, delays + 1):
+            programme = dict(programmes[0])  # We clone the original programme
+            programme["channel"] = f"{programme['channel']}-{delay}h"
+            programme["start"] -= timedelta(hours=delay)
+            programme["stop"] -= timedelta(hours=delay)
+            programmes.append(programme)
+
+        return programmes
+
     def create_programme(self, programme):
         cer = programme["cod_evento_rejilla"]
 
         if cer in self.cache:
             return self.cache.get(cer)
 
-        start_time = DateTime().format_time(programme["f_evento_rejilla"])
-        stop_time = DateTime().format_time(programme["f_fin_evento_rejilla"])
-
         info = {
             "channel": programme["cod_cadena_tv"],
             "title": programme["des_evento_rejilla"],
             "category": programme["des_genero"],
-            "start": start_time,
-            "stop": stop_time
+            "start": DateTime().parse(programme["f_evento_rejilla"]),
+            "stop": DateTime().parse(programme["f_fin_evento_rejilla"])
         }
 
         cee = programme["cod_elemento_emision"]
@@ -97,22 +130,22 @@ class EPGGenerator(object):
         print("Generating epg data...")
 
         p = Pool(cpu_count())
-        epg_channels = p.map(self.create_channel, channels)
+        epg_channels = p.map(self.create_channels, channels)
         p.terminate()
         p.join()
 
         p = Pool(cpu_count())
-        epg_programmes = p.map(self.create_programme, programmes)
+        epg_programmes = p.map(self.create_programmes, programmes)
         p.terminate()
         p.join()
 
-        return epg_channels, epg_programmes
+        return itertools.chain(*epg_channels), itertools.chain(*epg_programmes)
 
     def dump_epg_data(self, channels, programmes):
         print("Dumping epg data to xml...")
 
         tv = ET.Element("tv")
-        tv.set("date", DateTime().get_date_str(0))
+        tv.set("date", datetime.now().strftime("%Y-%m-%d"))
         tv.set("source-info-url", "http://comunicacion.movistarplus.es/programacion/")
         tv.set("source-info-name", "Movistar")
         tv.set("generator-info-name", "Movistar EPG generator")
@@ -131,8 +164,8 @@ class EPGGenerator(object):
 
         for programme_data in programmes:
             programme = ET.SubElement(tv, "programme")
-            programme.set("start", programme_data["start"])
-            programme.set("stop", programme_data["stop"])
+            programme.set("start", DateTime().format(programme_data["start"]))
+            programme.set("stop", DateTime().format(programme_data["stop"]))
             programme.set("channel", programme_data["channel"])
 
             title = ET.SubElement(programme, "title")
@@ -213,4 +246,4 @@ if __name__ == "__main__":
 
     print(f"Stop: {stop}")
 
-    print(f"Execution time: {stop-start}")
+    print(f"Execution time: {stop - start}")
