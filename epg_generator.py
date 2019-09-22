@@ -6,8 +6,7 @@ from multiprocessing import Pool, cpu_count
 
 from diskcache import Cache
 
-from conf import OUTPUT_FOLDER, CACHE_FOLDER, EPG_FILE, DOWNLOAD_EXTRA_INFO, DAYS_TO_DOWNLOAD, DELAYS, HD_CHANNELS, \
-    CHANNELS_TO_DOWNLOAD
+from conf import OUTPUT_FOLDER, CACHE_FOLDER, EPG_FILE, DOWNLOAD_EXTRA_INFO, DAYS_TO_DOWNLOAD, DELAYS, HD_CHANNELS
 from date_time import DateTime
 from movistar import Movistar
 
@@ -30,10 +29,11 @@ class EPGGenerator(object):
 
     def download_movistar_data(self):
         print("Downloading movistar data...")
+        channels = Movistar.get_channels()
         return [
             Movistar.get_programation(
                 (datetime.now() + timedelta(days=days)).strftime("%Y-%m-%d"),
-                CHANNELS_TO_DOWNLOAD,
+                channels,
             )
             for days in range(-1, DAYS_TO_DOWNLOAD)
         ]
