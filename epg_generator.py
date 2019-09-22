@@ -215,7 +215,7 @@ class EPGGenerator(object):
                         director = ET.SubElement(credits, "director")
                         director.text = director_data
 
-        xml = ET.tostring(tv, encoding="utf8", method="xml")
+        xml = ET.tostring(tv, encoding="ISO-8859-1", method="xml")
 
         if not os.path.exists(OUTPUT_FOLDER):
             os.makedirs(OUTPUT_FOLDER)
